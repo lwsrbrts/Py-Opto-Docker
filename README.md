@@ -18,8 +18,6 @@ The opto-isolator is connected to the Raspberry Pi as follows:
 
 ![Pin layout for opto-isolator](https://github.com/lwsrbrts/Pwsh-Opto-Docker/raw/master/Pin-layout.png "Pin layout for opto-isolator")
 
-PowerShell uses WiringPi pin numbering so the opto-isolator `OUT` is connected to physical pin `7` on the Raspberry Pi's GPIO, which is also WiringPi pin `7`. If you are not using physical pin `7`, the WiringPi pin is (obviously) different. For example, physical pin `26` on the Raspberry Pi GPIO is WiringPi pin `11` as far as the PowerShell IoT module is concerned.
-
 ## Install Docker
 
 Go to `https://get.docker.com/`
