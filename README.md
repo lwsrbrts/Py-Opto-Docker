@@ -57,9 +57,9 @@ These environment variables must be passed to the container (PowerShell script u
 
 * `CLIENT_NAME` - The name of the MQTT topic to be appended to /garage/.
 * `MQTT_BROKER` - The IP address or host name of hte MQTT broker.
-* `MQTT_USER` - The username to be used ot connect ot the MQTT broker
+* `MQTT_USER` - The username to be used to connect to the MQTT broker
 * `MQTT_PASS` - The password for the MQTT_USER.
-* `OPTO_PIN` - The GPIO pin number the opto isolator is connected to.
+* `OPTO_PIN` - The GPIO pin number the opto isolator OUT is connected to.
 * `PYTHONUNBUFFERED` - Required to ensure that python doesn't buffer stdout so you can see docker logs.
 
 ## Example
@@ -86,9 +86,15 @@ docker run -d --privileged --name py-opto \
 
 ### Review logs from a container
 
-Redirect standard and error logs to a file.
+Tail the docker container's logs to see what's going on.
 
 `docker container logs -f py-opto`
+
+### Get inside the docker container
+
+Execute /bin/bash inside the container interactively.
+
+`docker exec -it py-opto /bin/bash`
 
 ### Updating the container from GitHub
 
