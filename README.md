@@ -55,11 +55,12 @@ Builds the image locally and tags it as `py-opto:1.0`
 
 These environment variables must be passed to the container (PowerShell script ultimately).
 
-* `CLIENT_NAME` - The name of the MQTT topic to be appended to /garage/.
+* `CLIENT_NAME` - The name of the MQTT topic.
+* `ROOT_TOPIC` - The name of the MQTT root topic. Topic becomes eg. "{ROOT_TOPIC}/{CLIENT_NAME}"
 * `MQTT_BROKER` - The IP address or host name of hte MQTT broker.
 * `MQTT_USER` - The username to be used to connect to the MQTT broker
 * `MQTT_PASS` - The password for the MQTT_USER.
-* `OPTO_PIN` - The GPIO pin number the opto isolator OUT is connected to.
+* `OPTO_PIN` - The broadcom GPIO pin number the opto-isolator OUT is connected to.
 * `PYTHONUNBUFFERED` - Required to ensure that python doesn't buffer stdout so you can see docker logs.
 
 ## Example
@@ -72,6 +73,7 @@ This is an example docker run command which assumes the image has been built and
 docker run -d --privileged --name py-opto \
               --restart=unless-stopped \
               -h FRONT \
+              -e ROOT_TOPIC=garage \
               -e CLIENT_NAME=FRONT \
               -e MQTT_BROKER=192.168.1.100 \
               -e OPTO_PIN=4 \
@@ -100,7 +102,7 @@ Execute /bin/bash inside the container interactively.
 
 Basically pull the Dockerfile and script from the GitHub repo and build it again then run once a new image is built.
 
-```powershell
+```bash
 docker container stop py-opto
 
 docker container rm py-opto
