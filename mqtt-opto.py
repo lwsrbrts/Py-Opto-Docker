@@ -1,19 +1,27 @@
 #!/usr/bin/env python3
 import RPi.GPIO as GPIO
 import paho.mqtt.client as mqtt
-import time
-import os
+import queue, time, os
 
 # Set up some variables for use.
 CLIENT = os.environ['CLIENT_NAME']
+ROOT_TOPIC = os.environ['ROOT_TOPIC']
 BROKER = os.environ['MQTT_BROKER']
 OPTO_PIN = int(os.environ['OPTO_PIN'])  # 7 on SIDE, 4 on FRONT
 MQTT_USER = os.environ['MQTT_USER']
 MQTT_PASS = os.environ['MQTT_PASS']
 
-# The topic default
-TOPIC = "garage/" + CLIENT
+# The topic
+TOPIC = ROOT_TOPIC + "/" + CLIENT
+ 
+# Create a queue.
+q = queue.Queue(10) # Simple FIFO queue.
 
+# Have a type of job to publish to the queue.
+class Job(object):
+    def __init__(self, state):
+        self.state = state
+        return
 
 # Use broadcom pin numbers
 GPIO.setmode(GPIO.BCM)
@@ -41,26 +49,31 @@ def motion_detection(pin):
     # Motion was detected if pin is 0 (LOW)
     if GPIO.input(OPTO_PIN) == 1:
         if state == False:
-            print ("False request for OFF")
+            print (time.strftime('%X') + ": False request for OFF.")
             #pass
         else:
-            print(time.strftime('%X') + ": Publishing OFF message for " + CLIENT)
-            data = client.publish(TOPIC, '{"state":"off"}', 1, True)
-            print(time.strftime('%X') + ": Waiting for publish ack...")
-            data.wait_for_publish()
-            print(time.strftime('%X') + ": Received publish ack. Awaiting next event...")
+            print(time.strftime('%X') + ": Creating OFF job for " + CLIENT)
+            q.put(Job('off'))
             state = False
     else:
         if state == False:
-            print(time.strftime('%X') + ": Publishing ON message for " + CLIENT)
-            data = client.publish(TOPIC, '{"state":"on"}', 1, True)
-            print(time.strftime('%X') + ": Waiting for publish ack...")
-            data.wait_for_publish()
-            print(time.strftime('%X') + ": Received publish ack. Awaiting next event...")
+            print(time.strftime('%X') + ": Creating ON job for " + CLIENT)
+            q.put(Job('on'))
             state = True
         else:
-            print("False request for ON")
+            print (time.strftime('%X') + ": False request for ON.")
             #pass
+
+def process_job():
+    next_job = q.get(False)
+    print(time.strftime('%X') + ": Publishing " + next_job.state + " message for " + CLIENT)
+    data = client.publish(TOPIC, '{"state":"' + next_job.state + '"}', 1, True)
+    print(time.strftime('%X') + ": Waiting for publish ack...")
+    data.wait_for_publish()
+    print(time.strftime('%X') + ": Received publish ack. Pausing 2 seconds...")
+    q.task_done()
+    time.sleep(2) # If there are multiple jobs on the queue, we pause publishing to allow HA to keep up.
+    print(time.strftime('%X') + ": Done. Awaiting next event...")
 
 # Start up
 motion_detection(OPTO_PIN)
@@ -71,7 +84,8 @@ GPIO.add_event_detect(OPTO_PIN, GPIO.BOTH, callback=motion_detection, bouncetime
 # Enter the processing loop, except when an interrupt/exception occurs.
 try:
     while True:
-        pass
+        if not q.empty():
+            process_job()
 except:
     print("Quitting by request or exception.")
     client.loop_stop()
