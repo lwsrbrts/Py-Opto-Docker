@@ -12,7 +12,7 @@ The opto-isolator circuit used was purchased from eBay and is described as:
 ![ebay seller](https://github.com/lwsrbrts/Pwsh-Opto-Docker/raw/master/ebay-seller.png "ebay seller")
 
 
-## Pin layout
+## Pin layouts
 
 The opto-isolator is connected to the Raspberry Pi as follows:
 
